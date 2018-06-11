@@ -19,11 +19,52 @@
  */
  $fake_register_globals=false;
  $sanitize_all_escapes=true;
- 
+ $testing = false;
+
 require_once("../../interface/globals.php");
 require_once("$srcdir/sql.inc");
 require_once("$srcdir/formatting.inc.php");
 require_once("$srcdir/acl.inc");
+
+//make sure to get the dates
+if ( ! $_POST['from_date']) {
+
+    $from_date = date("Y-m-d");
+
+} else {
+    $from_date = $_POST['from_date'];
+}
+
+if ( !$_POST['to_date']) {
+    // If a specific patient, default to 2 years ago.
+    $to_date = date('Y-m-d', strtotime("+1 day"));
+} else{
+
+    $to_date = date('Y-m-d', strtotime("+1 day", strtotime($_POST['to_date'])));
+}
+
+//Enter false if searching for users that aren't active
+function getUsersArray($active = true){
+
+    $users = array();
+    $query = "Select distinct(username) from users ";
+    $query .= $active = true ? "where active = 1" : " ";
+    $query .= " AND username != ''";
+    $result = sqlStatement($query);
+    while ($row = sqlFetchArray($result)) {
+        array_push($users, $row['username']);
+
+    }
+    return $users;
+}
+
+function ifTestingTrue($testing){
+
+    if($testing)
+        return " Limit 0,10";
+    else return "";
+
+}
 
 //This function will find the date-time of the last
 function getLastSessionActivityTime($user, $date){
@@ -37,7 +78,8 @@ function getLastSessionActivityTime($user, $date){
 function getSessionTime($user, $date){
 	//get the datetime of the next login.
 	$query = "Select min(date) as date from log where date > '$date' and event = 'login' and user = '$user'";
-	$result = sqlStatement($query);
+
+    $result = sqlStatement($query);
 	$row = sqlFetchArray($result);
     //send the next login time to get the last session activity of the current session
     if($row['date'] == null){
@@ -58,29 +100,50 @@ function getSessionTime($user, $date){
     }
 }
 
+//takes in the user, and date range and returns the sum of sessions
+function getSumSessionsByUser($user, $from_date = '', $to_date = ''){
+    $sum = 0;
+    //get the list of dates and put it in an array
+    $query = "select date from log where event ='login' and user = '$user' ";
+        if($to_date != '')
+            $query .= " and date >= '$from_date' ";
+        if($from_date != '')
+            $query .= " and date <= '$to_date' ";
 
+        $result = sqlStatement($query);
 
-//Enter false if searching for users that aren't active
-function getUsersArray($active = true){
+    //iterate through each of the dates. get the session time, and sum them
 
-    $users = array();
-    $query = "Select distinct(username) from users ";
-    $query .= $active = true ? "where active = 1" : " ";
-    $query .= " AND username != ''";
-    $result = sqlStatement($query);
     while ($row = sqlFetchArray($result)) {
-        array_push($users, $row['username']);
+        $sum = $sum + getSessionTime($user, $row['date']);
 
     }
-    return $users;
+
+    //return the sum
+
+    return $sum;
 }
 
+
+
+
+
+
 //To list out records with given criteria
-if($_POST['func']=="list_users")
+if($_POST['func']=="list_all_users")
 {
 
-	$qstring = "Select  *, log.id as logid from log join users on username = user where event like '%log%' and event not like '%attempt%' and users.active = 1";
 
+	$qstring = "Select  *, log.id as logid from log join users on username = user where event like '%login%' and event not like '%attempt%' and users.active = 1";
+    if(isset($_POST['from_date']) && strlen($_POST['from_date'] > 9)){
+        $qstring .= " and date > '{$_POST['from_date']}' ";
+    }
+
+    if(isset($_POST['to_date']) && strlen($_POST['to_date'] > 9)){
+        $qstring .= " and date < '{$_POST['to_date']} 23:59:59' ";
+    }
+
+    $qstring .= ifTestingTrue($testing);
 	$result = sqlStatement($qstring);
 
     $gua_string = getUsersArray();
@@ -96,11 +159,35 @@ if($_POST['func']=="list_users")
 				<td align="center"><?= xl($row["user"]); ?></td>
 				<td align="center"><?= xl($row["lname"]); ?></td>
 				<td align="center"><?= xl($row["fname"]); ?></td>
-				<td align="center" label=""><?php echo xl($row["event"]) . " | " . $row['comments'] ?></td>
 				<td align="center"><?php echo xl($diff); ?></td>
 			</tr>
 			<?php
 		}
 	}
 }
+
+//To list out records with given criteria
+if($_POST['func']=="user_summary") {
+
+    $response = array();
+    $user_array = getUsersArray();
+    foreach($user_array as $user){
+        $row = sqlQuery( "Select * from users where username = '$user'");
+        $sum = getSumSessionsByUser($user, $from_date, $to_date);
+    ?>
+        <tr>
+
+            <td></td>
+            <td align="center"><?= xl($user); ?></td>
+            <td align="center"><?= xl($row['lname']); ?></td>
+            <td align="center"><?= xl($row['fname']); ?></td>
+            <td align="center"><?= xl("TOTALS: " . $sum); ?></td>
+        </tr>
+    <?php
+    }
+
+}
+
+
+
 ?>

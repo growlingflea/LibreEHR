@@ -23,6 +23,10 @@
 require_once("../globals.php");
 require_once("$srcdir/sql.inc");
 require_once("$srcdir/formatting.inc.php");
+require_once("$srcdir/vendor/libreehr/Framework/DataTable/DataTable.php");
+require_once( "reports_controllers/AppointmentsController.php");
+
+
 
 ?>
 <head>
@@ -52,94 +56,196 @@ require_once("$srcdir/formatting.inc.php");
 <link rel="stylesheet" href="../../library/css/jquery.datetimepicker.css">
 <script>
 $(document).ready(function() {
-	listusers();
 
-	// OnClick handler for the rows
-	$('#document_table tbody tr').live('click',function(){
-		var newpid=$(this).attr("id");
+    if($('#details').val()) {
+        listusers();
+        console.log($("#details").val() + '= details');
+    }
+    else {
+        user_summary();
+        console.log($("#summary").val() + '= summary');
 
-	 });
-
+    }
 
 
 });
 
 var iter=0;
 var oTable;
+
+$("#form_from_date").val();
 //Function to initiate datatables plugin
 function init_datatables()
 {
-	oTable=$('#document_table').dataTable({
-		"iDisplayLength": 100
-		// language strings are included so we can translate them
+	oTable=$('#document_table').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'excel', 'pdf'
+        ],
 
-
+        "iDisplayLength": 100,
+        "select":true,
+        "searching":true,
+        "retrieve" : true
 	});
 
+
+
+
+
 	iter=1;
+}
+
+function refreshPage(){
+
+    window.location.reload();
+
+
+
+
 }
 
 //Function to populate document list
 function listusers()
 {
-	if(iter==1)
-	oTable.fnClearTable();
 
-    var details=0;
-    if ($('#details_selector').is(':checked'))
-    {
-        details=1;
-    }
-    else
-    {
-        details=0;
-    }
 
     $.ajax({
-	  type: "POST",
-	  url: "../../library/ajax/username_report_ajax.php",
-	  data: {func:"list_users",details:details},
+        type: "POST",
+        url: "../../library/ajax/username_report_ajax.php",
+        data: {
+            func:"list_all_users",
+            to_date:$("#form_to_date").val(),
+            from_date:$("#form_from_date").val()
+        },
         beforeSend: function(){
             $('#image').show();
         },
 
-	  success:function(data)
-			  {
-			    $('#users_list').html(data);
-				init_datatables();
-			  },
+        success:function(data)
+        {
+            $('#users_list').html(data);
+            init_datatables();
+        },
         complete: function(){
             $('#image').hide();
         }
-	  
-	});
+
+    });
 
 
-	
+
+	iter=1;
 }
+
+function user_summary()
+{
+
+    $.ajax({
+        type: "POST",
+        url: "../../library/ajax/username_report_ajax.php",
+        data: {
+            func:"user_summary",
+            to_date: $("#form_to_date").val(),
+            from_date: $("#form_from_date").val()
+        },
+        beforeSend: function(){
+            $('#image').show();
+        },
+
+        success:function(data)
+        {
+            $('#users_list').html(data);
+            init_datatables();
+        },
+        complete: function(){
+            $('#image').hide();
+        }
+
+    });
+
+
+
+
+}
+
+
+
+
+
 </script>
 </head>
 <body class="body_top formtable">&nbsp;&nbsp;
+<form action="./username_report.php" method="post">
+<label><input value="Show Session Details" type="submit" id="details_selector" name="show_all" id="show_all"><?php ?></label>
 
-<label><input type="checkbox" id="details_selector" onchange="listusers();"><?php echo xla('Show All'); ?></label>
+<label><input value="Show Summary" type="submit" id="summary_selector" name="show_summary" id="show_summary"><?php ?></label>
+<?php
+
+if ( ! $_POST['form_from_date']) {
+    // If a specific patient, default to 2 years ago.
+    $from_date = date("Y-m-d");
+
+} else {
+    $from_date = fixDate($_POST['form_from_date'], date('Y-m-d'));
+    $to_date = fixDate($_POST['form_to_date'], date('Y-m-d'));
+}
+
+if ( !$_POST['form_to_date']) {
+    // If a specific patient, default to 2 years ago.
+    $to_date = date("Y-m-d");
+}
+
+?>
+
+    <input type='text' name='form_from_date' id='form_from_date' size='10'
+           value='<?= $from_date ?>' >
+
+    <input type='text' name='form_to_date' id='form_to_date' size='10'
+           value='<?= $to_date ?>' >
+
+    <input hidden id = 'summary' value = '<?= $_POST['show_summary']  ?>'>
+    <input hidden id = 'details' value = '<?= $_POST['show_all']  ?>'>
+
+</form>
+
+
+
 &nbsp;&nbsp;
-<img id="image" src="/images/loading.gif" width="200" height="200">
+
+<img hidden id="image" src="/images/loading.gif" width="100" height="100">
 
 
 
 <table cellpadding="0" cellspacing="0" border="0" class="display formtable" id="document_table">
 	<thead>
+
 		<tr>
 			<th><?php echo xla('Date'); ?></th>
 			<th><?php echo xla('User'); ?></th>
 			<th><?php echo xla('Last'); ?></th>
 			<th><?php echo xla('First'); ?></th>
-			<th><?php echo xla('Action'); ?></th>
 			<th><?php echo xla('Session Time'); ?></th>
-
 		</tr>
+
 	</thead>
 	<tbody id="users_list">
 	</tbody>
 </table>
 </body>
+<link rel="stylesheet" href="../../library/css/jquery.datetimepicker.css">
+<script type="text/javascript" src="../../library/js/jquery.datetimepicker.full.min.js"></script>
+
+<script>
+    $(function() {
+        $("#form_from_date").datetimepicker({
+            timepicker: false,
+            format: "Y-m-d"
+        });
+        $("#form_to_date").datetimepicker({
+            timepicker: false,
+            format: "Y-m-d"
+        });
+
+    });
+</script>
