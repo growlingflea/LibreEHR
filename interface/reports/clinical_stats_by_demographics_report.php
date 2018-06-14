@@ -31,7 +31,7 @@ require_once( "reports_controllers/AppointmentsController.php");
 ?>
 <head>
 <?php html_header_show();?>
-<title><?php xl('User Activity Report','e'); ?></title>
+<title><?php xl('Clinical Reports by Demographics','e'); ?></title>
 <link rel="stylesheet" href="<?php echo $css_header;?>" type="text/css">
 <style type="text/css">
 @import "<?php echo $GLOBALS['webroot'] ?>/assets/js/datatables/media/css/demo_page.css";
@@ -46,7 +46,7 @@ require_once( "reports_controllers/AppointmentsController.php");
 <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-ui-1.8.21.custom.min.js"></script>
 <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/tooltip.js"></script>
 <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/assets/js/fancybox-1.3.4/jquery.fancybox-1.3.4.pack.js"></script>
-<script type='text/javascript' src='<?php echo $GLOBALS['></script>
+<script type='text/javascript' src='<?php echo $GLOBALS['webroot'] ?>/library/dialog.js'></script>
 <link rel="stylesheet" href="<?php echo $GLOBALS['webroot'] ?>/assets/js/fancybox-1.3.4/jquery.fancybox-1.3.4.css" type="text/css" media="screen" />
 
 <link rel="stylesheet" type="text/css" href="<?php echo $GLOBALS['webroot'] ?>/assets/js/DataTables-1.10.16/datatables.css">
@@ -112,7 +112,7 @@ function listusers()
 
     $.ajax({
         type: "POST",
-        url: "../../library/ajax/username_report_ajax.php",
+        url: "../../library/ajax/clinical_state_by_demographics_ajax.php",
         data: {
             func:"list_all_users",
             to_date:$("#form_to_date").val(),
@@ -143,7 +143,7 @@ function user_summary()
 
     $.ajax({
         type: "POST",
-        url: "../../library/ajax/username_report_ajax.php",
+        url: "../../library/ajax/clinical_state_by_demographics_ajax.php",
         data: {
             func:"user_summary",
             to_date: $("#form_to_date").val(),
@@ -176,7 +176,7 @@ function user_summary()
 </script>
 </head>
 <body class="body_top formtable">&nbsp;&nbsp;
-<form action="./username_report.php" method="post">
+<form action="./clinical_state_by_demographics.php" method="post">
 <label><input value="Show Session Details" type="submit" id="details_selector" name="show_all" id="show_all"><?php ?></label>
 
 <label><input value="Show Summary" type="submit" id="summary_selector" name="show_summary" id="show_summary"><?php ?></label>
