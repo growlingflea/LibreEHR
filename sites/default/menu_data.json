@@ -560,6 +560,14 @@
             "children" : [ ],
             "requirement" : 0
         },{
+            "label" : "Clinical Statistics by Demographics",
+            "menu_id" : "rep0",
+            "target" : "rep",
+            "url" : "/interface/reports/clinical_stats_by_dempgraphics_report.php",
+            "children" : [ ],
+            "requirement" : 0
+        },
+            {
             "label" : "Patient List By Referrer",
             "menu_id" : "rep0",
             "target" : "rep",
