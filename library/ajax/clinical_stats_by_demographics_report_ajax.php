@@ -66,127 +66,57 @@ function ifTestingTrue($testing){
 
 }
 
-//This function will find the date-time of the last
-function getLastSessionActivityTime($user, $date){
-    $query = "Select date from log where user = '$user' and date < '$date' order by date desc limit 0,1";
-    $result = sqlStatement($query);
-    $row = sqlFetchArray($result);
-    return $row['date'];
+function getDiagsFromIssueEncounter($testing = false, $from_date, $to_date){
 
-}
+    $query = "SELECT patient_data.pid, issue_encounter.encounter, form_encounter.date, type, lists.title, lists.diagnosis, activity, dob, city, state, status, sex, race, ethnicity ";
+    $query .= "FROM `issue_encounter` ";
+    $query .= "join lists on list_id = lists.id ";
+    $query .= "join patient_data on lists.pid = patient_data.pid ";
+    $query .= "join form_encounter on issue_encounter.encounter = form_encounter.encounter";
+    $query .= " where form_encounter.date >= '$from_date' and form_encounter.date < '$to_date' ";
+    $query .= ifTestingTrue($testing);
 
-function getSessionTime($user, $date){
-	//get the datetime of the next login.
-	$query = "Select min(date) as date from log where date > '$date' and event = 'login' and user = '$user'";
-
-    $result = sqlStatement($query);
-	$row = sqlFetchArray($result);
-    //send the next login time to get the last session activity of the current session
-    if($row['date'] == null){
-
-        return 0;
-
-    }else {
-        $date2 = getLastSessionActivityTime($user, $row['date']);
-        $datetime1 = strtotime($date);
-        $datetime2 = strtotime($date2);
-
-        $interval = $datetime2 - $datetime1;
-
-        $interval = round($interval / (60 * 60), 2);
-
-        return $interval;
-
-    }
-}
-
-//takes in the user, and date range and returns the sum of sessions
-function getSumSessionsByUser($user, $from_date = '', $to_date = ''){
-    $sum = 0;
-    //get the list of dates and put it in an array
-    $query = "select date from log where event ='login' and user = '$user' ";
-        if($to_date != '')
-            $query .= " and date >= '$from_date' ";
-        if($from_date != '')
-            $query .= " and date <= '$to_date' ";
-
-        $result = sqlStatement($query);
-
-    //iterate through each of the dates. get the session time, and sum them
-
-    while ($row = sqlFetchArray($result)) {
-        $sum = $sum + getSessionTime($user, $row['date']);
-
-    }
-
-    //return the sum
-
-    return $sum;
+    return $query;
 }
 
 
+function getDiagsFromBillingEncounter(){
 
 
+}
 
 
-//To list out records with given criteria
 if($_POST['func']=="list_all_users")
 {
 
+    $query = getDiagsFromIssueEncounter($testing, $from_date, $to_date);
 
-	$qstring = "Select  *, log.id as logid from log join users on username = user where event like '%login%' and event not like '%attempt%' and users.active = 1";
-    if(isset($_POST['from_date']) && strlen($_POST['from_date'] > 9)){
-        $qstring .= " and date > '{$_POST['from_date']}' ";
+    $result = sqlStatement($query);
+
+    while ($row = sqlFetchArray($result)) {
+
+
+
+            ?>
+
+            <tr id="<?= $row["logid"]; ?>">
+                <td align="center"><?= xl($row["pid"]); ?></td>
+                <td align="center"><?= xl($row["sex"]); ?></td>
+                <td align="center"><?= xl($row["dob"]); ?></td>
+                <td align="center"><?= xl($row["ethnicity"]); ?></td>
+                <td align="center"><?= xl($row["diagnosis"]); ?></td>
+                <td align="left"><?= xl($row["title"]); ?></td>
+
+            </tr>
+            <?php
+
     }
 
-    if(isset($_POST['to_date']) && strlen($_POST['to_date'] > 9)){
-        $qstring .= " and date < '{$_POST['to_date']} 23:59:59' ";
-    }
 
-    $qstring .= ifTestingTrue($testing);
-	$result = sqlStatement($qstring);
 
-    $gua_string = getUsersArray();
 
-	while ($row = sqlFetchArray($result)) {
-		if ($row['event'] == 'login') {
-			$diff = getSessionTime($row['user'], $row['date']);
-
-			?>
-
-			<tr id="<?= $row["logid"]; ?>">
-				<td align="center"><?= xl($row["date"]); ?></td>
-				<td align="center"><?= xl($row["user"]); ?></td>
-				<td align="center"><?= xl($row["lname"]); ?></td>
-				<td align="center"><?= xl($row["fname"]); ?></td>
-				<td align="center"><?php echo xl($diff); ?></td>
-			</tr>
-			<?php
-		}
-	}
 }
 
-//To list out records with given criteria
-if($_POST['func']=="user_summary") {
-
-    $response = array();
-    $user_array = getUsersArray();
-    foreach($user_array as $user){
-        $row = sqlQuery( "Select * from users where username = '$user'");
-        $sum = getSumSessionsByUser($user, $from_date, $to_date);
-    ?>
-        <tr>
-
-            <td></td>
-            <td align="center"><?= xl($user); ?></td>
-            <td align="center"><?= xl($row['lname']); ?></td>
-            <td align="center"><?= xl($row['fname']); ?></td>
-            <td align="center"><?= xl("TOTALS: " . $sum); ?></td>
-        </tr>
-    <?php
-    }
-
-}
 
 
 
