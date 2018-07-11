@@ -94,14 +94,14 @@ if($_POST['func']=="list_all_users")
     $result = sqlStatement($query);
 
     while ($row = sqlFetchArray($result)) {
-
+        $sex = ($row['sex'] == 'Male') ? 'M' : 'F';
 
 
             ?>
 
             <tr id="<?= $row["logid"]; ?>">
                 <td align="center"><?= xl($row["pid"]); ?></td>
-                <td align="center"><?= xl($row["sex"]); ?></td>
+                <td align="center"><?= xl($sex); ?></td>
                 <td align="center"><?= xl($row["dob"]); ?></td>
                 <td align="center"><?= xl($row["ethnicity"]); ?></td>
                 <td align="center"><?= xl($row["diagnosis"]); ?></td>

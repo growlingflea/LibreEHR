@@ -31,7 +31,7 @@ require_once "reports_controllers/ClinicalController.php";
 ?>
 <head>
 <?php html_header_show();?>
-<title><?php xl('Clinical Reports by Demographics','e'); ?></title>
+<title><?php xl('Clinical Reports: Demographics vs Diagnosis','e'); ?></title>
 <link rel="stylesheet" href="<?php echo $css_header;?>" type="text/css">
 <style type="text/css">
 @import "<?php echo $GLOBALS['webroot'] ?>/assets/js/datatables/media/css/demo_page.css";
@@ -102,6 +102,9 @@ $("#form_from_date").val();
 function init_datatables()
 {
 	oTable=$('#document_table').DataTable({
+        "search": {
+            "caseInsensitive": false
+        },
         dom: 'Brtip',
         buttons: [
             'copy', 'excel', 'pdf'
@@ -110,6 +113,7 @@ function init_datatables()
         "iDisplayLength": 100,
         "select":true,
         "retrieve" : true,
+
 
 
     });
@@ -124,7 +128,7 @@ function init_datatables()
     $('#column1_search').on( 'keyup', function () {
         oTable
             .columns( 1 )
-            .search( this.value )
+            .search( this.value)
             .draw();
     } );
 
