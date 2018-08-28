@@ -19,7 +19,7 @@
  */
  $fake_register_globals=false;
  $sanitize_all_escapes=true;
- $testing = false;
+ $testing = true;
 
 require_once("../../interface/globals.php");
 require_once("$srcdir/sql.inc");
@@ -61,7 +61,7 @@ function getUsersArray($active = true){
 function ifTestingTrue($testing){
 
     if($testing)
-        return " Limit 0,10";
+        return " Limit 0,100";
     else return "";
 
 }
@@ -85,6 +85,22 @@ function getDiagsFromBillingEncounter(){
 
 }
 
+function getLabData($testing = false, $from_date, $to_date){
+
+    $query  = "select pres.procedure_result_id, pd.sex, pd.dob, pd.ethnicity, pres.result_text, pres.result, pres.abnormal from procedure_result pres ";
+    $query .= "join procedure_report prep on pres.procedure_report_id = prep.procedure_report_id " ;
+    $query .= "join procedure_order prord on prep.procedure_order_id = prord.procedure_order_id " ;
+    $query .= "join patient_data pd on pd.pid = prord.patient_id ";
+
+
+
+    $query .= ifTestingTrue($testing);
+
+    return $query;
+}
+
+
+
 
 if($_POST['func']=="list_all_users")
 {
@@ -98,16 +114,16 @@ if($_POST['func']=="list_all_users")
 
 
             ?>
+        <tr id="<?= $row["logid"]; ?>">
+            <td align="center"><?= xl($row["pid"]); ?></td>
+            <td align="center"><?= xl($sex); ?></td>
+            <td align="center"><?= xl($row["dob"]); ?></td>
+            <td align="center"><?= xl($row["ethnicity"]); ?></td>
+            <td align="center"><?= xl($row["diagnosis"]); ?></td>
+            <td align="left"><?= xl($row["title"]); ?></td>
 
-            <tr id="<?= $row["logid"]; ?>">
-                <td align="center"><?= xl($row["pid"]); ?></td>
-                <td align="center"><?= xl($sex); ?></td>
-                <td align="center"><?= xl($row["dob"]); ?></td>
-                <td align="center"><?= xl($row["ethnicity"]); ?></td>
-                <td align="center"><?= xl($row["diagnosis"]); ?></td>
-                <td align="left"><?= xl($row["title"]); ?></td>
+        </tr>
 
-            </tr>
             <?php
 
     }
@@ -116,6 +132,79 @@ if($_POST['func']=="list_all_users")
 
 
 }
+
+
+if($_POST['func']=="lab_result_search")
+{
+
+    $query = getLabData($testing, $from_date, $to_date);
+
+    $result = sqlStatement($query);
+
+    while ($row = sqlFetchArray($result)) {
+        $sex = ($row['sex'] == 'Male') ? 'M' : 'F';
+
+
+        ?>
+
+
+        <tr id="<?= $row["logid"]; ?>">
+            <td align="center"><?= xl($row["procedure_result_id"]); ?></td>
+            <td align="center"><?= xl($sex); ?></td>
+            <td align="center"><?= xl($row["dob"]); ?></td>
+            <td align="center"><?= xl($row["ethnicity"]); ?></td>
+            <td align="center"><?= xl($row["result_text"]); ?></td>
+            <td align="center"><?= xl($row["result"]); ?></td>
+            <td align="center"><?= xl($row["abnormal"]); ?></td>
+
+        </tr>
+        <?php
+
+    }
+
+
+
+
+}
+
+if($_POST['func']=="lab_result_summary")
+{
+
+    $query = getDiagsFromIssueEncounter($testing, $from_date, $to_date);
+
+    $result = sqlStatement($query);
+
+    while ($row = sqlFetchArray($result)) {
+        $sex = ($row['sex'] == 'Male') ? 'M' : 'F';
+
+
+        ?>
+
+        <tr id="<?= $row["logid"]; ?>">
+            <td align="center"><?= xl($row["pid"]); ?></td>
+            <td align="center"><?= xl($sex); ?></td>
+            <td align="center"><?= xl($row["dob"]); ?></td>
+            <td align="center"><?= xl($row["ethnicity"]); ?></td>
+            <td align="center"><?= xl($row["diagnosis"]); ?></td>
+            <td align="left"><?= xl($row["title"]); ?></td>
+
+        </tr>
+        <?php
+
+    }
+
+
+
+
+}
+
+
+
+
+
+
+
+
 
 
 
