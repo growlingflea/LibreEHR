@@ -554,16 +554,16 @@
         },
             {
             "label" : "Clinical Statistics: Demographics vs. Diagnosis",
-            "menu_id" : "rep0",
-            "target" : "rep",
+            "menu_id" : "clndd0",
+            "target" : "clndd",
             "url" : "/interface/reports/clinical_stats_by_demographics_report.php",
             "children" : [ ],
             "requirement" : 0
         },
             {
             "label" : "Clinical Statistics: Demographics vs. Lab Results",
-            "menu_id" : "rep0",
-            "target" : "rep",
+            "menu_id" : "clndl0",
+            "target" : "clndl",
             "url" : "/interface/reports/lab_stats_by_demographics_report.php",
             "children" : [ ],
             "requirement" : 0
