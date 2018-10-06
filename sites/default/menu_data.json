@@ -551,22 +551,16 @@
             "url" : "/interface/reports/patient_list.php",
             "children" : [ ],
             "requirement" : 0
-        }, {
-
-            "label" : "User Login Report",
-            "menu_id" : "rep0",
-            "target" : "rep",
-            "url" : "/interface/reports/username_report.php",
-            "children" : [ ],
-            "requirement" : 0
-        },{
+        },
+            {
             "label" : "Clinical Statistics: Demographics vs. Diagnosis",
             "menu_id" : "rep0",
             "target" : "rep",
             "url" : "/interface/reports/clinical_stats_by_demographics_report.php",
             "children" : [ ],
             "requirement" : 0
-        },{
+        },
+            {
             "label" : "Clinical Statistics: Demographics vs. Lab Results",
             "menu_id" : "rep0",
             "target" : "rep",
